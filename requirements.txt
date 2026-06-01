@@ -1,0 +1,36 @@
+# Runtime dependencies — what the installed package needs.
+# Install: uv pip install -r requirements.txt
+# Dev/test: uv pip install -r requirements-dev.txt
+
+# Core models
+pydantic>=2.0
+
+# Fuzzy matching (W3)
+rapidfuzz>=3.0
+
+# Date parsing (W2)
+dateparser>=1.2
+
+# Language detection — non-English rejection (W6)
+langdetect>=1.0.9
+
+# PDF text extraction — text-layer only (W6)
+pdfplumber>=0.10
+
+# Report rendering (W4)
+jinja2>=3.1
+
+# CLI (W6)
+typer>=0.9
+
+# Data generation (W7)
+reportlab>=4.0
+faker>=20.0
+
+# --- Uncomment when starting the phase ---
+
+# W9: Audio transcription (CPU-only, no CUDA required)
+# faster-whisper>=1.0
+
+# W5 optional: secondary semantic signal for diagnosis matching
+# sentence-transformers>=2.0

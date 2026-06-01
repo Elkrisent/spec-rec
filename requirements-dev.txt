@@ -1,0 +1,9 @@
+# Development and testing dependencies.
+# Install: uv pip install -r requirements-dev.txt
+# (This file already includes all runtime deps via -r requirements.txt)
+
+-r requirements.txt
+
+# Testing
+pytest>=7.4
+pytest-snapshot>=0.9   # snapshot tests for W4 reporting

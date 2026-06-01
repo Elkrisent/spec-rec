@@ -10,6 +10,7 @@ env/
 
 # uv
 .python-version
+uv.lock
 
 # LLM response cache (large, machine-specific)
 .llm_cache/
@@ -18,12 +19,12 @@ env/
 .pytest_cache/
 .cache/
 
+# Test snapshots (regenerate locally)
+**/__snapshots__/
+
 # Coverage
 .coverage
 htmlcov/
-
-# Snapshots (regenerate locally)
-tests/__snapshots__/
 
 # Build artifacts
 *.egg-info/
@@ -38,8 +39,14 @@ build/
 .env
 *.env
 
-# Audio and document test files (can be large)
-*.wav
-*.mp3
+# Logs
+*.log
+
+# Generated outputs (reports, eval runs, data_gen output)
+reports/
 data_gen/output/
 eval/runs/
+
+# Audio and large binary test files
+*.wav
+*.mp3
