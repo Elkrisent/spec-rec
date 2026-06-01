@@ -1,0 +1,86 @@
+{
+  "claim_id": "C001",
+  "verified_at": "2025-03-20T10:00:30",
+  "consistency_score": 0.6875,
+  "risk_level": "HIGH",
+  "field_verdicts": {
+    "hospital_name": {
+      "status": "MATCH",
+      "score": 1.0,
+      "transcript_value": "Apollo Hospital",
+      "document_value": "Apollo Hospitals",
+      "transcript_quote": "I was admitted to Apollo Hospital",
+      "document_quote": "Apollo Hospitals, Jubilee Hills",
+      "note": "fuzzy ratio: 0.96"
+    },
+    "admission_date": {
+      "status": "MATCH",
+      "score": 1.0,
+      "transcript_value": "March 12",
+      "document_value": "2025-03-12",
+      "transcript_quote": "on March 12",
+      "document_quote": "Date of Admission: 12/03/2025",
+      "note": "year-absent comparison: month=03 day=12 — delta 0 day(s)"
+    },
+    "discharge_date": {
+      "status": "MISSING",
+      "score": 0.0,
+      "transcript_value": null,
+      "document_value": "2025-03-16",
+      "transcript_quote": null,
+      "document_quote": "Date of Discharge: 16/03/2025",
+      "note": "absent from transcript; excluded from score denominator"
+    },
+    "diagnosis": {
+      "status": "MATCH",
+      "score": 1.0,
+      "transcript_value": "appendicitis",
+      "document_value": "Acute Appendicitis",
+      "transcript_quote": "for appendicitis",
+      "document_quote": "Primary Diagnosis: Acute Appendicitis",
+      "note": "LLM judge: equivalent disease (DISEASE vs DISEASE)"
+    },
+    "billed_amount": {
+      "status": "MISMATCH",
+      "score": 0.0,
+      "transcript_value": 50000,
+      "document_value": 62000,
+      "transcript_quote": "around fifty thousand rupees",
+      "document_quote": "Total Bill Amount: Rs.62,000",
+      "note": "difference: 24.0% (exceeds 5% tolerance)"
+    },
+    "length_of_stay": {
+      "status": "MISSING",
+      "score": 0.0,
+      "transcript_value": null,
+      "document_value": 4,
+      "transcript_quote": null,
+      "document_quote": "Length of Stay: 4 days",
+      "note": "absent from transcript; excluded from score denominator"
+    }
+  },
+  "flags": [
+    {
+      "type": "AMOUNT_MISMATCH",
+      "severity": "HIGH",
+      "message": "Claimant stated Rs.50,000; bill shows Rs.62,000 (24.0% difference — exceeds 5% tolerance)"
+    },
+    {
+      "type": "MISSING_FIELD",
+      "severity": "LOW",
+      "message": "discharge_date absent from transcript; cannot verify"
+    },
+    {
+      "type": "MISSING_FIELD",
+      "severity": "LOW",
+      "message": "length_of_stay absent from transcript; cannot verify"
+    },
+    {
+      "type": "LOW_CONFIDENCE_EXTRACTION",
+      "severity": "LOW",
+      "message": "billed_amount extracted from transcript with confidence 0.75 (stated as approximate)"
+    }
+  ],
+  "missing_fields": ["discharge_date", "length_of_stay"],
+  "low_quality_sources": []
+}

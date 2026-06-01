@@ -1,0 +1,52 @@
+{
+  "schema_version": "2.0",
+  "fields": [
+    {
+      "id": "hospital_name",
+      "label": "Hospital / Facility Name",
+      "weight": 0.10,
+      "match_type": "fuzzy_string",
+      "match_tolerance": 0.85,
+      "notes": "Advisory field. Token-level fuzzy match after canonicalization. Weight lowered from V1 (0.20→0.10) — entity resolution is too noisy to carry high weight."
+    },
+    {
+      "id": "admission_date",
+      "label": "Admission Date",
+      "weight": 0.20,
+      "match_type": "date",
+      "match_tolerance_days": 1,
+      "notes": "ISO 8601 after normalization. ±1 day tolerance. If transcript year is absent, compare month+day only."
+    },
+    {
+      "id": "discharge_date",
+      "label": "Discharge Date",
+      "weight": 0.10,
+      "match_type": "date",
+      "match_tolerance_days": 1,
+      "notes": "Optional in MVP — only verified if present in both sources."
+    },
+    {
+      "id": "diagnosis",
+      "label": "Primary Diagnosis",
+      "weight": 0.25,
+      "match_type": "medical_semantic",
+      "notes": "LLM equivalence judge. Must distinguish disease from procedure (appendicitis ≠ appendectomy). Entity type (DISEASE/PROCEDURE) from extraction used as guardrail."
+    },
+    {
+      "id": "billed_amount",
+      "label": "Total Billed Amount",
+      "weight": 0.25,
+      "match_type": "numeric",
+      "match_tolerance_pct": 5,
+      "notes": "Compare as integers in same currency (INR). ±5% tolerance. Bill is authoritative."
+    },
+    {
+      "id": "length_of_stay",
+      "label": "Duration of Admission (days)",
+      "weight": 0.10,
+      "match_type": "numeric",
+      "match_tolerance_abs": 1,
+      "notes": "Derived from admission/discharge dates if not stated explicitly."
+    }
+  ]
+}

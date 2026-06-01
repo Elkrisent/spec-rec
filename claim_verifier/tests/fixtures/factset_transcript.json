@@ -1,0 +1,49 @@
+{
+  "source_type": "transcript",
+  "source_id": "call_recording_C001",
+  "extraction_timestamp": "2025-03-20T10:00:00",
+  "facts": {
+    "hospital_name": {
+      "value": "Apollo Hospital",
+      "confidence": 0.95,
+      "source_quote": "I was admitted to Apollo Hospital",
+      "entity_type": null,
+      "quote_verified": true
+    },
+    "admission_date": {
+      "value": "March 12",
+      "confidence": 0.90,
+      "source_quote": "on March 12",
+      "entity_type": null,
+      "quote_verified": true
+    },
+    "discharge_date": {
+      "value": null,
+      "confidence": 0.0,
+      "source_quote": null,
+      "entity_type": null,
+      "quote_verified": true
+    },
+    "diagnosis": {
+      "value": "appendicitis",
+      "confidence": 0.85,
+      "source_quote": "for appendicitis",
+      "entity_type": "DISEASE",
+      "quote_verified": true
+    },
+    "billed_amount": {
+      "value": 50000,
+      "confidence": 0.75,
+      "source_quote": "around fifty thousand rupees",
+      "entity_type": null,
+      "quote_verified": true
+    },
+    "length_of_stay": {
+      "value": null,
+      "confidence": 0.0,
+      "source_quote": null,
+      "entity_type": null,
+      "quote_verified": true
+    }
+  }
+}

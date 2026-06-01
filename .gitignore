@@ -1,0 +1,45 @@
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# uv
+.python-version
+
+# LLM response cache (large, machine-specific)
+.llm_cache/
+
+# pytest
+.pytest_cache/
+.cache/
+
+# Coverage
+.coverage
+htmlcov/
+
+# Snapshots (regenerate locally)
+tests/__snapshots__/
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+
+# Secrets / env
+.env
+*.env
+
+# Audio and document test files (can be large)
+*.wav
+*.mp3
+data_gen/output/
+eval/runs/

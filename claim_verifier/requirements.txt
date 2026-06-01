@@ -1,0 +1,43 @@
+# ============================================================
+# Medical Claim Verifier — full dependency list
+# Install with:  uv pip install -r requirements.txt
+# ============================================================
+
+# Core / contracts (W1)
+pydantic>=2.0
+
+# Testing (W1+)
+pytest>=7.4
+pytest-snapshot>=0.9   # snapshot tests for W4 reporting
+
+# Fuzzy matching (W3)
+rapidfuzz>=3.0
+
+# Date parsing (W2)
+dateparser>=1.2
+
+# Language detection — non-English rejection (W6 ingestion)
+langdetect>=1.0.9
+
+# PDF text extraction — text-layer only (W6)
+pdfplumber>=0.10
+
+# Report rendering (W4)
+jinja2>=3.1
+
+# CLI (W6)
+typer>=0.9
+
+# Data generation (W7)
+reportlab>=4.0
+faker>=20.0
+
+# ============================================================
+# Stretch / deferred — uncomment when starting the phase
+# ============================================================
+
+# W9: Audio transcription (faster-whisper; CPU-friendly; no CUDA needed)
+# faster-whisper>=1.0
+
+# W5 optional: semantic similarity for diagnosis secondary signal
+# sentence-transformers>=2.0

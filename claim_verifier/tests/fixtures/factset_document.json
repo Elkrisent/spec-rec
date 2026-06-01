@@ -1,0 +1,49 @@
+{
+  "source_type": "document",
+  "source_id": "bill_C001.pdf",
+  "extraction_timestamp": "2025-03-20T10:00:05",
+  "facts": {
+    "hospital_name": {
+      "value": "Apollo Hospitals",
+      "confidence": 1.0,
+      "source_quote": "Apollo Hospitals, Jubilee Hills",
+      "entity_type": null,
+      "quote_verified": true
+    },
+    "admission_date": {
+      "value": "12/03/2025",
+      "confidence": 1.0,
+      "source_quote": "Date of Admission: 12/03/2025",
+      "entity_type": null,
+      "quote_verified": true
+    },
+    "discharge_date": {
+      "value": "16/03/2025",
+      "confidence": 1.0,
+      "source_quote": "Date of Discharge: 16/03/2025",
+      "entity_type": null,
+      "quote_verified": true
+    },
+    "diagnosis": {
+      "value": "Acute Appendicitis",
+      "confidence": 1.0,
+      "source_quote": "Primary Diagnosis: Acute Appendicitis",
+      "entity_type": "DISEASE",
+      "quote_verified": true
+    },
+    "billed_amount": {
+      "value": 62000,
+      "confidence": 1.0,
+      "source_quote": "Total Bill Amount: Rs.62,000",
+      "entity_type": null,
+      "quote_verified": true
+    },
+    "length_of_stay": {
+      "value": 4,
+      "confidence": 1.0,
+      "source_quote": "Length of Stay: 4 days",
+      "entity_type": null,
+      "quote_verified": true
+    }
+  }
+}
