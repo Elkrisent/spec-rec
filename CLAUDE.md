@@ -58,8 +58,8 @@ task_breakdown.md > architecture.md > roadmap.md
 | 2 | Normalization | **✓ Done** | 80/80 tests passing |
 | 3 | Verification + scoring | **✓ Done** | 120/120 tests passing |
 | 4 | Reporting | **✓ Done** | 164/164 tests passing |
-| 5 | LLM extraction | Not started | Next up |
-| 6 | Ingestion + pipeline + CLI | Not started | |
+| 5 | LLM extraction | **✓ Done** | 211/211 tests passing |
+| 6 | Ingestion + pipeline + CLI | Not started | Next up |
 | 7 | Synthetic data generator | Not started | |
 | 8 | Evaluation harness | Not started | |
 | 9 | Audio + hardening | Not started | Stretch |
@@ -88,5 +88,12 @@ task_breakdown.md > architecture.md > roadmap.md
 - `claim_verifier/templates/report.md.j2` — Jinja2 template: header, field table with citations, flags, missing fields, quality warnings, reviewer guidance
 - `claim_verifier/stages/reporting.py` — `render(result: VerificationResult) → str`; citation format `value [source: "quote"]`; reviewer guidance keyed to all four risk bands
 - `claim_verifier/tests/test_reporting.py` — 44 tests (T4.1–T4.4): citation helper, badge, score %, flag ordering, missing/quality messaging, guidance text, field labels
+
+**W5 deliverables shipped:**
+- `claim_verifier/backends/__init__.py` — `LLMBackend` Protocol (runtime_checkable) + `StubBackend` with call tracking
+- `claim_verifier/backends/ollama.py` — `OllamaBackend`: cache-first, `/api/chat`, JSON-schema `format` param, full response cached
+- `claim_verifier/stages/extraction.py` — `EXTRACTION_SCHEMA` JSON schema + `extract(source_type, source_id, text, backend) → FactSet`; one repair retry; `_verify_quotes()` marks `quote_verified=False` without zeroing confidence
+- `claim_verifier/judge.py` — `LLMJudge` added (T5.6); `StubJudge` retained; `JUDGE_SCHEMA` defined
+- `claim_verifier/tests/test_extraction.py` — 47 tests (T5.1–T5.7): Protocol checks, cache hit path, schema structure, extract() logic, repair retry, quote verification, LLMJudge, 5-texts offline via pre-seeded LLMCache
 
 ---
