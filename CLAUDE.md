@@ -57,8 +57,8 @@ task_breakdown.md > architecture.md > roadmap.md
 | 1 | Foundations & contracts | **✓ Done** | 31/31 tests passing |
 | 2 | Normalization | **✓ Done** | 80/80 tests passing |
 | 3 | Verification + scoring | **✓ Done** | 120/120 tests passing |
-| 4 | Reporting | Not started | Next up |
-| 5 | LLM extraction | Not started | |
+| 4 | Reporting | **✓ Done** | 164/164 tests passing |
+| 5 | LLM extraction | Not started | Next up |
 | 6 | Ingestion + pipeline + CLI | Not started | |
 | 7 | Synthetic data generator | Not started | |
 | 8 | Evaluation harness | Not started | |
@@ -83,5 +83,10 @@ task_breakdown.md > architecture.md > roadmap.md
 - `claim_verifier/judge.py` — `DiagnosisJudge` Protocol + `StubJudge` (configurable verdict for testing)
 - `claim_verifier/stages/verification.py` — `verify(claim_id, transcript, document, judge) → VerificationResult`: fuzzy/date/numeric/medical_semantic matchers, binary scoring, MISSING exclusion, INSUFFICIENT_DATA guard, flag severity ordering
 - `claim_verifier/tests/test_verification.py` — 40 tests (T3.1–T3.8) incl. 8 golden score scenarios hand-verified; year-absent date bug caught + fixed
+
+**W4 deliverables shipped:**
+- `claim_verifier/templates/report.md.j2` — Jinja2 template: header, field table with citations, flags, missing fields, quality warnings, reviewer guidance
+- `claim_verifier/stages/reporting.py` — `render(result: VerificationResult) → str`; citation format `value [source: "quote"]`; reviewer guidance keyed to all four risk bands
+- `claim_verifier/tests/test_reporting.py` — 44 tests (T4.1–T4.4): citation helper, badge, score %, flag ordering, missing/quality messaging, guidance text, field labels
 
 ---
