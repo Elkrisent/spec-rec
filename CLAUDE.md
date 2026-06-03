@@ -50,7 +50,7 @@ task_breakdown.md > architecture.md > roadmap.md
 
 ## Current progress
 
-**Status as of last update:** Week 2 complete.
+**Status as of last update:** Week 6 complete.
 
 | Wk | Phase | Status | Notes |
 |---|---|---|---|
@@ -59,8 +59,8 @@ task_breakdown.md > architecture.md > roadmap.md
 | 3 | Verification + scoring | **✓ Done** | 120/120 tests passing |
 | 4 | Reporting | **✓ Done** | 164/164 tests passing |
 | 5 | LLM extraction | **✓ Done** | 211/211 tests passing |
-| 6 | Ingestion + pipeline + CLI | Not started | Next up |
-| 7 | Synthetic data generator | Not started | |
+| 6 | Ingestion + pipeline + CLI | **✓ Done** | 264/264 tests passing |
+| 7 | Synthetic data generator | Not started | Next up |
 | 8 | Evaluation harness | Not started | |
 | 9 | Audio + hardening | Not started | Stretch |
 | 10 | Buffer / polish | Not started | Stretch |
@@ -95,5 +95,12 @@ task_breakdown.md > architecture.md > roadmap.md
 - `claim_verifier/stages/extraction.py` — `EXTRACTION_SCHEMA` JSON schema + `extract(source_type, source_id, text, backend) → FactSet`; one repair retry; `_verify_quotes()` marks `quote_verified=False` without zeroing confidence
 - `claim_verifier/judge.py` — `LLMJudge` added (T5.6); `StubJudge` retained; `JUDGE_SCHEMA` defined
 - `claim_verifier/tests/test_extraction.py` — 47 tests (T5.1–T5.7): Protocol checks, cache hit path, schema structure, extract() logic, repair retry, quote verification, LLMJudge, 5-texts offline via pre-seeded LLMCache
+
+**W6 deliverables shipped:**
+- `claim_verifier/stages/ingestion.py` — `ingest_transcript(path) → str`; `ingest_document(path) → str`; pdfplumber text-layer; `<100 chars → reject (scanned)`; non-English → reject (langdetect, seed=0)
+- `claim_verifier/redaction.py` — `redact(text) → str`; regex masks email/PAN/Aadhaar/phone before any LLM call; original text kept intact for quote verification
+- `claim_verifier/pipeline.py` — `run()` (file paths, stages 1–5) + `run_from_text()` (text strings, stages 2–5); `PipelineResult` dataclass; `{status, data, error}` contract; failed stage → partial INSUFFICIENT_DATA report + HIGH flag, no crash; normalization flags merged and re-sorted
+- `claim_verifier/cli.py` — Typer `verify` command; `--claim-id`, `--transcript`, `--document`, `--out`; `--audio` deferred with clear error message; exit code 2 on pipeline errors
+- `claim_verifier/tests/test_pipeline.py` — 53 tests (T6.1–T6.5): ingestion happy-path + error cases (scanned PDF, non-English, empty, missing), redaction all 4 PII families, pipeline E2E with SeqStub + StubJudge, extraction failure → partial report, ingestion failure via run()
 
 ---
