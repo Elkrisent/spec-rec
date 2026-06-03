@@ -1,0 +1,22 @@
+{
+  "case_id": "HOLD005",
+  "error_type": "CLEAN",
+  "true_facts": {
+    "hospital_name": "Narayana Health",
+    "hospital_address": "Bommasandra, Bengaluru - 560099",
+    "admission_date": "2025-06-08",
+    "discharge_date": "2025-06-13",
+    "diagnosis": "Community-Acquired Pneumonia",
+    "billed_amount": 68000,
+    "length_of_stay": 5
+  },
+  "expected_verdicts": {
+    "hospital_name": "MATCH",
+    "admission_date": "MATCH",
+    "discharge_date": "MATCH",
+    "diagnosis": "MATCH",
+    "billed_amount": "MATCH",
+    "length_of_stay": "MATCH"
+  },
+  "notes": "CLEAN but highly vague transcript. Most fields will be UNPARSEABLE or MISSING. Pipeline will likely return INSUFFICIENT_DATA or inflated score. Expected verdicts reflect ground truth (claimant is truthful but vague). MISSING predictions on MATCH fields count as TN — no metric penalty, but the scoring inflation issue is documented."
+}

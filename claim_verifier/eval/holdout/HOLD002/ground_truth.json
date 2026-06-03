@@ -1,0 +1,22 @@
+{
+  "case_id": "HOLD002",
+  "error_type": "AMOUNT",
+  "true_facts": {
+    "hospital_name": "Fortis Healthcare",
+    "hospital_address": "Bannerghatta Road, Bengaluru - 560076",
+    "admission_date": "2025-03-02",
+    "discharge_date": "2025-03-07",
+    "diagnosis": "Typhoid Fever",
+    "billed_amount": 78000,
+    "length_of_stay": 5
+  },
+  "expected_verdicts": {
+    "hospital_name": "MATCH",
+    "admission_date": "MATCH",
+    "discharge_date": "MATCH",
+    "diagnosis": "MATCH",
+    "billed_amount": "MISMATCH",
+    "length_of_stay": "MATCH"
+  },
+  "notes": "Amount error: transcript says 30,000; bill is 78,000 (deviation ~61.5%, well above 5% tolerance)."
+}

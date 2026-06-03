@@ -1,0 +1,22 @@
+{
+  "case_id": "HOLD001",
+  "error_type": "CLEAN",
+  "true_facts": {
+    "hospital_name": "Apollo Hospitals",
+    "hospital_address": "Jubilee Hills, Hyderabad - 500033",
+    "admission_date": "2025-04-15",
+    "discharge_date": "2025-04-19",
+    "diagnosis": "Dengue Fever",
+    "billed_amount": 45000,
+    "length_of_stay": 4
+  },
+  "expected_verdicts": {
+    "hospital_name": "MATCH",
+    "admission_date": "MATCH",
+    "discharge_date": "MATCH",
+    "diagnosis": "MATCH",
+    "billed_amount": "MATCH",
+    "length_of_stay": "MATCH"
+  },
+  "notes": "Clean case, structured transcript. All fields should be extractable and match."
+}

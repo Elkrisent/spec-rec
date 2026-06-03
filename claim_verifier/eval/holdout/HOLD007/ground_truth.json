@@ -1,0 +1,22 @@
+{
+  "case_id": "HOLD007",
+  "error_type": "CLEAN",
+  "true_facts": {
+    "hospital_name": "Lilavati Hospital",
+    "hospital_address": "Bandra West, Mumbai - 400050",
+    "admission_date": "2025-07-10",
+    "discharge_date": "2025-07-13",
+    "diagnosis": "Cellulitis",
+    "billed_amount": 50000,
+    "length_of_stay": 3
+  },
+  "expected_verdicts": {
+    "hospital_name": "MATCH",
+    "admission_date": "MATCH",
+    "discharge_date": "MATCH",
+    "diagnosis": "MATCH",
+    "billed_amount": "MATCH",
+    "length_of_stay": "MATCH"
+  },
+  "notes": "Amount within ±5% tolerance: transcript says 52,000; bill shows 50,000. Deviation = 4% < 5% → MATCH. Tests tolerance boundary."
+}

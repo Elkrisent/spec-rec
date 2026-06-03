@@ -1,0 +1,22 @@
+{
+  "case_id": "HOLD009",
+  "error_type": "CLEAN",
+  "true_facts": {
+    "hospital_name": "Kokilaben Hospital",
+    "hospital_address": "Andheri West, Mumbai - 400053",
+    "admission_date": "2025-09-10",
+    "discharge_date": "2025-09-14",
+    "diagnosis": "Peptic Ulcer Disease",
+    "billed_amount": 40000,
+    "length_of_stay": 4
+  },
+  "expected_verdicts": {
+    "hospital_name": "MATCH",
+    "admission_date": "MATCH",
+    "discharge_date": "MATCH",
+    "diagnosis": "MATCH",
+    "billed_amount": "MATCH",
+    "length_of_stay": "MATCH"
+  },
+  "notes": "Date within ±1 day tolerance: transcript says 11/09/2025 admitted, 15/09/2025 discharged; bill shows 10/09/2025 and 14/09/2025. Delta = 1 day, within tolerance → MATCH."
+}

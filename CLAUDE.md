@@ -50,7 +50,7 @@ task_breakdown.md > architecture.md > roadmap.md
 
 ## Current progress
 
-**Status as of last update:** Week 6 complete.
+**Status as of last update:** Week 10 complete. Project done.
 
 | Wk | Phase | Status | Notes |
 |---|---|---|---|
@@ -60,10 +60,10 @@ task_breakdown.md > architecture.md > roadmap.md
 | 4 | Reporting | **✓ Done** | 164/164 tests passing |
 | 5 | LLM extraction | **✓ Done** | 211/211 tests passing |
 | 6 | Ingestion + pipeline + CLI | **✓ Done** | 264/264 tests passing |
-| 7 | Synthetic data generator | Not started | Next up |
-| 8 | Evaluation harness | Not started | |
-| 9 | Audio + hardening | Not started | Stretch |
-| 10 | Buffer / polish | Not started | Stretch |
+| 7 | Synthetic data generator | **✓ Done** | 298/298 tests passing |
+| 8 | Evaluation harness | **✓ Done** | 321/321 tests passing |
+| 9 | Audio + hardening | **✓ Done** | 348/348 tests passing |
+| 10 | Web UI + polish | **✓ Done** | 372/372 tests passing |
 
 **W1 deliverables shipped:**
 - `claim_verifier/config.py` — schema, thresholds, Ollama model names
@@ -100,7 +100,37 @@ task_breakdown.md > architecture.md > roadmap.md
 - `claim_verifier/stages/ingestion.py` — `ingest_transcript(path) → str`; `ingest_document(path) → str`; pdfplumber text-layer; `<100 chars → reject (scanned)`; non-English → reject (langdetect, seed=0)
 - `claim_verifier/redaction.py` — `redact(text) → str`; regex masks email/PAN/Aadhaar/phone before any LLM call; original text kept intact for quote verification
 - `claim_verifier/pipeline.py` — `run()` (file paths, stages 1–5) + `run_from_text()` (text strings, stages 2–5); `PipelineResult` dataclass; `{status, data, error}` contract; failed stage → partial INSUFFICIENT_DATA report + HIGH flag, no crash; normalization flags merged and re-sorted
-- `claim_verifier/cli.py` — Typer `verify` command; `--claim-id`, `--transcript`, `--document`, `--out`; `--audio` deferred with clear error message; exit code 2 on pipeline errors
+- `claim_verifier/cli.py` — Typer `verify` command; `--claim-id`, `--transcript/--audio`, `--document`, `--out`; exit code 2 on pipeline errors
 - `claim_verifier/tests/test_pipeline.py` — 53 tests (T6.1–T6.5): ingestion happy-path + error cases (scanned PDF, non-English, empty, missing), redaction all 4 PII families, pipeline E2E with SeqStub + StubJudge, extraction failure → partial report, ingestion failure via run()
+
+**W7 deliverables shipped:**
+- `claim_verifier/data_gen/__init__.py`
+- `claim_verifier/data_gen/generate_bill_pdf.py` — `generate_bill_pdf(facts, path) → Path`; reportlab A4 text-layer PDF; extractable by pdfplumber (T7.1)
+- `claim_verifier/data_gen/generate_claims.py` — `generate_dataset(n_total, n_clean, output_dir, seed) → list[dict]`; 6 Faker-based transcript templates; `_inject_amount_error` (10–40%); `_inject_date_error` (3–15 d); `_inject_hospital_error` (different hospital → guaranteed fuzzy MISMATCH); `round_trip_check` verifies all injected values are verbatim in transcript text; writes 50 cases (35 error/15 clean) + `ground_truth.jsonl` to `data_gen/output/` (T7.2–T7.5)
+- `claim_verifier/tests/test_data_gen.py` — 34 tests (T7.6): PDF text-layer (9), round-trip (6), error injectors (9), dataset generation (10)
+
+**W8 deliverables shipped:**
+- `claim_verifier/eval/__init__.py`
+- `claim_verifier/eval/metrics.py` — `compute_field_metrics` (TP/FP/FN/TN + n_missing + precision/recall/f1); `compute_fp_rate_on_clean` (case-level FP rate on CLEAN cases); `compute_eval_summary` (all fields); `format_report` (with leakage caveat + target check) (T8.1–T8.2, T8.5)
+- `claim_verifier/eval/run_eval.py` — `eval_dataset`, `eval_holdout`, `main` CLI; runs pipeline on 50 synthetic + 10 holdout cases; prints eval report; **requires Ollama running on first run** (T8.3)
+- `claim_verifier/eval/holdout/HOLD001–HOLD010/` — 10 hand-built holdout cases: clean (6), single error (3: AMOUNT/DATE/HOSPITAL), double error (1: AMOUNT+DATE); each has transcript.txt + bill.pdf + ground_truth.json; covers tolerance boundaries (±5% amount, ±1 day date, hospital abbreviation, Indian comma notation, vague transcript) (T8.4)
+- `claim_verifier/tests/test_metrics.py` — 23 tests (T8.6): field metrics math (9), FP rate (5), eval summary (4), report formatting (5)
+
+**W9 deliverables shipped:**
+- `claim_verifier/stages/ingestion.py` — `ingest_audio(path) → str`; faster-whisper `base` model, CPU, int8; non-English reject; size limit 50 MB; extension allowlist; lazy import (works when faster-whisper not installed with clear error) (T9.1); added size (20 MB) + extension validation to `ingest_document` and extension validation to `ingest_transcript` (T9.2)
+- `claim_verifier/retention.py` — `secure_delete(path, *, secure=False)` (overwrite with zeros then unlink); `apply_retention(paths, *, secure=False)` (T9.3)
+- `claim_verifier/config.py` — `RETENTION_DELETE_SOURCES`, `RETENTION_SECURE_DELETE` knobs
+- `claim_verifier/cli.py` — `--audio` flag fully wired: `ingest_audio → run_from_text` path; `--transcript` and `--audio` are mutually exclusive
+- `README.md` — project overview, prerequisites, installation, demo, audio input, fields table, risk levels, eval results table, known limitations, production roadmap (deferred items) (T9.4)
+- `claim_verifier/tests/test_audio.py` — 27 tests: audio ingestion (14), document/transcript validation (3), secure_delete (5), apply_retention (5)
+
+**W10 deliverables shipped:**
+- `claim_verifier/backends/anthropic_backend.py` — `AnthropicBackend`: Claude API via tool use for JSON-schema-constrained output; same LLMCache used by OllamaBackend; splits system/user messages for Anthropic format (T10.3)
+- `claim_verifier/api/__init__.py` — package init
+- `claim_verifier/api/app.py` — FastAPI app factory (`create_app(backend, judge, api_key)`); `GET /` (HTML frontend), `GET /health`, `POST /verify` (multipart); backend selection via `BACKEND_TYPE=ollama|anthropic|stub` env var; optional `API_KEY` header auth; temp-file handling + cleanup; audio path via `ingest_audio`; transcript path via `pipeline.run()`; graceful errors (always 200 with INSUFFICIENT_DATA on pipeline failure) (T10.3)
+- `claim_verifier/api/__main__.py` — `python -m claim_verifier.api` entry point
+- HTML frontend (embedded in app.py) — single-page form; transcript/audio toggle; PDF upload; marked.js markdown rendering; loading spinner; risk-level badge
+- `README.md` — web API/UI section with local and hosted (Render/Railway) deployment instructions; Anthropic backend env vars; REST API curl examples
+- `claim_verifier/tests/test_api.py` — 24 tests: health (3), root HTML (3), verify happy-path (7), input validation (4), audio path (2), auth (5)
 
 ---

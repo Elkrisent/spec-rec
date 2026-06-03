@@ -1,0 +1,22 @@
+{
+  "case_id": "HOLD010",
+  "error_type": "CLEAN",
+  "true_facts": {
+    "hospital_name": "KIMS Hospital",
+    "hospital_address": "Minister Road, Secunderabad - 500003",
+    "admission_date": "2025-10-05",
+    "discharge_date": "2025-10-12",
+    "diagnosis": "Acute Cholecystitis",
+    "billed_amount": 120000,
+    "length_of_stay": 7
+  },
+  "expected_verdicts": {
+    "hospital_name": "MATCH",
+    "admission_date": "MATCH",
+    "discharge_date": "MATCH",
+    "diagnosis": "MATCH",
+    "billed_amount": "MATCH",
+    "length_of_stay": "MATCH"
+  },
+  "notes": "Indian comma notation test: transcript states 'Rs. 1,20,000'; normalizer strips currency and removes commas → 120000 → matches bill. Tests Indian grouping format."
+}

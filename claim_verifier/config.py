@@ -32,3 +32,7 @@ OLLAMA_TEMPERATURE = 0.0
 
 # LLM response cache (SHA-256 keyed; keeps CI offline; mandatory on CPU)
 LLM_CACHE_DIR = Path(__file__).parent.parent / ".llm_cache"
+
+# Retention policy (W9) — delete source files after pipeline run
+RETENTION_DELETE_SOURCES = False   # set True to auto-delete audio/PDF/transcript after run
+RETENTION_SECURE_DELETE  = False   # overwrite with zeros before unlinking (slower)

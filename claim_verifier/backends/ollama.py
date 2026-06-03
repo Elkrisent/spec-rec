@@ -71,7 +71,7 @@ class OllamaBackend:
             headers={"Content-Type": "application/json"},
         )
         try:
-            with urllib.request.urlopen(req, timeout=120) as r:
+            with urllib.request.urlopen(req, timeout=300) as r:
                 return json.loads(r.read())
         except urllib.error.URLError as exc:
             raise ConnectionError(

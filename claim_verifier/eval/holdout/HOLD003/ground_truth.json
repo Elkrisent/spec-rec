@@ -1,0 +1,22 @@
+{
+  "case_id": "HOLD003",
+  "error_type": "DATE",
+  "true_facts": {
+    "hospital_name": "KIMS Hospital",
+    "hospital_address": "Minister Road, Secunderabad - 500003",
+    "admission_date": "2025-03-15",
+    "discharge_date": "2025-03-20",
+    "diagnosis": "Urinary Tract Infection",
+    "billed_amount": 25000,
+    "length_of_stay": 5
+  },
+  "expected_verdicts": {
+    "hospital_name": "MATCH",
+    "admission_date": "MISMATCH",
+    "discharge_date": "MISMATCH",
+    "diagnosis": "MATCH",
+    "billed_amount": "MATCH",
+    "length_of_stay": "MATCH"
+  },
+  "notes": "Date error: transcript says admitted 10/03/2025 (discharged 15/03/2025); bill shows 15/03/2025 (discharged 20/03/2025). Offset = 5 days, above tolerance."
+}

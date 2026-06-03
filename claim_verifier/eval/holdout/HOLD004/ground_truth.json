@@ -1,0 +1,22 @@
+{
+  "case_id": "HOLD004",
+  "error_type": "HOSPITAL",
+  "true_facts": {
+    "hospital_name": "Manipal Hospital",
+    "hospital_address": "Old Airport Road, Bengaluru - 560017",
+    "admission_date": "2025-05-22",
+    "discharge_date": "2025-05-29",
+    "diagnosis": "Acute Pancreatitis",
+    "billed_amount": 95000,
+    "length_of_stay": 7
+  },
+  "expected_verdicts": {
+    "hospital_name": "MISMATCH",
+    "admission_date": "MATCH",
+    "discharge_date": "MATCH",
+    "diagnosis": "MATCH",
+    "billed_amount": "MATCH",
+    "length_of_stay": "MATCH"
+  },
+  "notes": "Hospital error: transcript says Narayana Health; bill shows Manipal Hospital. Clearly different names — fuzzy ratio well below 0.85."
+}

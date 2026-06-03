@@ -46,6 +46,7 @@ build/
 reports/
 data_gen/output/
 eval/runs/
+demo/report.md
 
 # Audio and large binary test files
 *.wav

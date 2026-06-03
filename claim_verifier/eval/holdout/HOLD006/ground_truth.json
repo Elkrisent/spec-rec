@@ -1,0 +1,22 @@
+{
+  "case_id": "HOLD006",
+  "error_type": "AMOUNT+DATE",
+  "true_facts": {
+    "hospital_name": "Medanta Hospital",
+    "hospital_address": "Sector 38, Gurugram - 122001",
+    "admission_date": "2025-05-01",
+    "discharge_date": "2025-05-06",
+    "diagnosis": "Hypertensive Emergency",
+    "billed_amount": 62000,
+    "length_of_stay": 5
+  },
+  "expected_verdicts": {
+    "hospital_name": "MATCH",
+    "admission_date": "MISMATCH",
+    "discharge_date": "MISMATCH",
+    "diagnosis": "MATCH",
+    "billed_amount": "MISMATCH",
+    "length_of_stay": "MATCH"
+  },
+  "notes": "Double error: transcript says 20/04/2025 (bill: 01/05/2025, offset=11 days) and Rs.40,000 (bill: Rs.62,000, deviation~35%). Both exceed tolerances."
+}

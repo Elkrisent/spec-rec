@@ -1,0 +1,22 @@
+{
+  "case_id": "HOLD008",
+  "error_type": "CLEAN",
+  "true_facts": {
+    "hospital_name": "Apollo Hospitals",
+    "hospital_address": "Jubilee Hills, Hyderabad - 500033",
+    "admission_date": "2025-08-20",
+    "discharge_date": "2025-08-24",
+    "diagnosis": "Acute Gastroenteritis",
+    "billed_amount": 35000,
+    "length_of_stay": 4
+  },
+  "expected_verdicts": {
+    "hospital_name": "MATCH",
+    "admission_date": "MATCH",
+    "discharge_date": "MATCH",
+    "diagnosis": "MATCH",
+    "billed_amount": "MATCH",
+    "length_of_stay": "MATCH"
+  },
+  "notes": "Hospital abbreviation test: transcript says 'Apollo Hospital' (singular); bill shows 'Apollo Hospitals' (plural). After normalization both become 'apollo hospital(s)' — rapidfuzz token_sort_ratio ~0.97 > 0.85 threshold → MATCH."
+}
