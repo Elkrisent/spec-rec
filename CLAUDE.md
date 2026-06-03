@@ -18,6 +18,7 @@ Build a Medical Claim Verification Assistant.
 ## Review Style
 Be critical.
 Identify flaws before implementation.
+update requirements.txt and .gitignore every time a new dependency is introduced.
 
 Authoritative documents:
 1. architecture.md
