@@ -51,3 +51,15 @@ demo/report.md
 # Audio and large binary test files
 *.wav
 *.mp3
+*.m4a
+*.flac
+*.ogg
+
+# Eval report output
+eval/report.md
+
+# Faster-whisper model cache
+~/.cache/huggingface/
+
+# Temp files from API uploads
+tmp/
