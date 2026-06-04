@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
@@ -157,14 +158,46 @@ class TestIngestion:
         assert issubclass(IngestionError, Exception)
 
     def test_document_scanned_rejection(self, tmp_path: Path) -> None:
-        """PDF with < 100 chars of extractable text → IngestionError (scanned)."""
+        """PDF with < 100 chars from pdfplumber where OCR also yields < 100 chars → IngestionError."""
         rl = pytest.importorskip("reportlab.pdfgen.canvas")
         pdf_path = tmp_path / "scanned.pdf"
         c = rl.Canvas(str(pdf_path))
         c.drawString(100, 700, "Hi")  # deliberately short
         c.save()
-        with pytest.raises(IngestionError, match="characters"):
-            ingest_document(pdf_path)
+        with patch("claim_verifier.stages.ingestion._ocr_pdf", return_value="Hi"):
+            with pytest.raises(IngestionError, match="characters"):
+                ingest_document(pdf_path)
+
+    def test_document_ocr_fallback_success(self, tmp_path: Path) -> None:
+        """Scanned PDF where OCR yields sufficient English text → returns OCR text."""
+        rl = pytest.importorskip("reportlab.pdfgen.canvas")
+        pdf_path = tmp_path / "scanned.pdf"
+        c = rl.Canvas(str(pdf_path))
+        c.drawString(100, 700, "Hi")  # pdfplumber yields < 100 chars
+        c.save()
+        ocr_text = (
+            "Apollo Hospitals Jubilee Hills. Date of Admission: 12/03/2025. "
+            "Primary Diagnosis: Acute Appendicitis. Total Bill Amount: Rs 62000. "
+            "Length of Stay: 4 days."
+        )
+        with patch("claim_verifier.stages.ingestion._ocr_pdf", return_value=ocr_text):
+            text = ingest_document(pdf_path)
+        assert "Apollo" in text
+        assert len(text) >= 100
+
+    def test_document_ocr_not_installed(self, tmp_path: Path) -> None:
+        """Scanned PDF when OCR dependencies are absent → IngestionError propagated."""
+        rl = pytest.importorskip("reportlab.pdfgen.canvas")
+        pdf_path = tmp_path / "scanned.pdf"
+        c = rl.Canvas(str(pdf_path))
+        c.drawString(100, 700, "Hi")  # pdfplumber yields < 100 chars
+        c.save()
+        with patch(
+            "claim_verifier.stages.ingestion._ocr_pdf",
+            side_effect=IngestionError("OCR dependencies are not installed"),
+        ):
+            with pytest.raises(IngestionError, match="OCR"):
+                ingest_document(pdf_path)
 
     def test_document_happy_path(self, tmp_path: Path) -> None:
         """Valid English PDF with enough text → returns extracted text."""

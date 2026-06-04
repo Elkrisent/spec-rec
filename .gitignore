@@ -63,3 +63,12 @@ eval/report.md
 
 # Temp files from API uploads
 tmp/
+
+# Claude Code project instructions (developer tool, not for GitHub)
+CLAUDE.md
+.claude/
+
+# Local test case fixtures
+testcase/
+demo/
+data_gen/

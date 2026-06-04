@@ -21,6 +21,7 @@ from __future__ import annotations
 import os
 import shutil
 import tempfile
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
 
@@ -223,11 +224,19 @@ def create_app(
 
     # ------------------------------------------------------------------ app
 
+    @asynccontextmanager
+    async def _lifespan(app: FastAPI):  # noqa: ARG001
+        bk, _ = _get()
+        if hasattr(bk, "warmup"):
+            bk.warmup()
+        yield
+
     api = FastAPI(
         title="Medical Claim Verification Assistant",
         description="Verify insurance claims against hospital bills.",
         version="0.9.0",
         docs_url="/docs",
+        lifespan=_lifespan,
     )
 
     # ------------------------------------------------------------------ auth

@@ -37,10 +37,31 @@ from claim_verifier.models import FactSet, FactValue, FieldVerdict, Flag, Verifi
 # Internal: matchers
 # ---------------------------------------------------------------------------
 
+# Generic facility-type words that carry no discriminating information.
+# A single-token name like "hosmat" is allowed to match "hosmat hospital"
+# because every extra token in the longer name is just a type suffix.
+_GENERIC_FACILITY_WORDS: frozenset[str] = frozenset({
+    "hospital", "hospitals", "clinic", "clinics",
+    "medical", "medicine", "centre", "center", "centers", "centres",
+    "care", "health", "healthcare", "institute", "institution",
+    "foundation", "trust", "society",
+})
+
+
 def _match_fuzzy_string(a: str, b: str) -> tuple[str, str]:
     ratio = fuzz.token_sort_ratio(a, b) / 100.0
     if ratio >= FUZZY_HOSPITAL_THRESHOLD:
         return "MATCH", f"fuzzy match, ratio={ratio:.2f}"
+    # Subset check: one name's tokens fully contained in the other's.
+    # Multi-token shorter name: always allowed (e.g. "Riverside Shore Memorial" ⊆ "… Hospital").
+    # Single-token shorter name: allowed only when every extra token in the longer name
+    # is a generic facility word (e.g. "hosmat" ⊆ "hosmat hospital").
+    tokens_a, tokens_b = set(a.split()), set(b.split())
+    shorter, longer = (tokens_a, tokens_b) if len(tokens_a) <= len(tokens_b) else (tokens_b, tokens_a)
+    if shorter.issubset(longer):
+        extra = longer - shorter
+        if len(shorter) >= 2 or extra.issubset(_GENERIC_FACILITY_WORDS):
+            return "MATCH", f"fuzzy match (name subset), ratio={ratio:.2f}"
     return "MISMATCH", f"fuzzy mismatch, ratio={ratio:.2f}"
 
 

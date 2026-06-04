@@ -40,6 +40,10 @@ _ISO_DATE_RE = re.compile(r"^(\d{4})-(\d{1,2})-(\d{1,2})$")
 # Strip leading currency symbols/codes (case-insensitive; handles ₹, Rs, Rs., INR, $).
 _CURRENCY_STRIP_RE = re.compile(r"^(?:₹|Rs\.?|INR|\$)\s*", re.IGNORECASE)
 
+# Strip trailing verbal currency words that spoken transcripts produce
+# (e.g. "40,000 rupees", "Rs 50,000 only").
+_TRAILING_CURRENCY_RE = re.compile(r"\s*rupees?\s*(?:only)?\s*$", re.IGNORECASE)
+
 # Validate the remaining numeric portion: digits with optional Indian commas,
 # then optional 1–2 decimal places.  E.g. "1,20,000" or "62,000.50".
 _NUMBER_RE = re.compile(r"^([0-9][0-9,]*)(?:\.\d{1,2})?$")
@@ -131,7 +135,8 @@ def _normalize_amount(
         return int(raw_value), None
 
     text = str(raw_value).strip()
-    text = _CURRENCY_STRIP_RE.sub("", text)  # strip ₹ / Rs. / INR / $
+    text = _CURRENCY_STRIP_RE.sub("", text)       # strip leading ₹ / Rs. / INR / $
+    text = _TRAILING_CURRENCY_RE.sub("", text)    # strip trailing "rupees only" etc.
 
     m = _NUMBER_RE.match(text)
     if not m:

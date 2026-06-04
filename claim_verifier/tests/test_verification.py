@@ -106,6 +106,15 @@ def test_stub_judge_configurable_match():
     ("city general hosp", "city general hospital", "MATCH"),
     ("apollo hospital",   "fortis hospital",   "MISMATCH"),
     ("star hospital",     "moon clinic",       "MISMATCH"),
+    # multi-token subset: shorter ⊆ longer with extra non-generic tokens
+    ("riverside shore memorial", "riverside shore memorial hospital", "MATCH"),  # dropped "hospital"
+    ("riverside shore memorial hospital", "riverside shore memorial", "MATCH"),  # order-independent
+    ("city hospital",    "city medical center",  "MISMATCH"),  # different substantive tokens
+    # single-token subset: allowed only when extras are all generic facility words
+    ("hosmat",  "hosmat hospital",          "MATCH"),   # brand name + generic suffix
+    ("hosmat",  "hosmat clinic",            "MATCH"),   # brand name + generic suffix
+    ("hosmat",  "hosmat hospitals bangalore","MISMATCH"),# extra "bangalore" is not generic
+    ("memorial","memorial children's hospital","MISMATCH"),# "children's" is substantive
 ])
 def test_fuzzy_string_matcher(a: str, b: str, expected: str):
     verdict, _ = _match_fuzzy_string(a, b)
@@ -119,19 +128,24 @@ def test_fuzzy_string_matcher(a: str, b: str, expected: str):
 @pytest.mark.parametrize("a,b,expected", [
     # Exact match
     ("2025-03-12", "2025-03-12", "MATCH"),
-    # Within tolerance (±1 day)
-    ("2025-03-12", "2025-03-13", "MATCH"),
-    ("2025-03-13", "2025-03-12", "MATCH"),
+    # Within tolerance (±2 days)
+    ("2025-03-12", "2025-03-13", "MATCH"),       # delta=1
+    ("2025-03-13", "2025-03-12", "MATCH"),       # delta=1 reversed
+    ("2025-03-12", "2025-03-14", "MATCH"),       # delta=2 — verbal testimony boundary
+    ("2025-03-14", "2025-03-12", "MATCH"),       # delta=2 reversed
     # Beyond tolerance
+    ("2025-03-12", "2025-03-15", "MISMATCH"),   # delta=3
     ("2025-03-12", "2025-03-17", "MISMATCH"),   # delta=5
     ("2025-03-12", "2025-03-20", "MISMATCH"),   # delta=8
     # Year-absent vs year-present: compare month/day only
     ("--03-12",    "2025-03-12", "MATCH"),
     ("--03-12",    "2025-03-13", "MATCH"),       # delta=1 by M/D
+    ("--03-12",    "2025-03-14", "MATCH"),       # delta=2 by M/D
     ("--03-12",    "2025-03-17", "MISMATCH"),    # delta=5 by M/D
     # Both year-absent
     ("--03-12",    "--03-12",    "MATCH"),
     ("--03-12",    "--03-13",    "MATCH"),
+    ("--03-12",    "--03-14",    "MATCH"),       # delta=2
     ("--03-12",    "--04-01",    "MISMATCH"),    # delta=20
 ])
 def test_date_matcher(a: str, b: str, expected: str):

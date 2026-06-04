@@ -50,7 +50,7 @@ task_breakdown.md > architecture.md > roadmap.md
 
 ## Current progress
 
-**Status as of last update:** Week 10 complete. Project done.
+**Status as of last update:** Week 10 complete + Tesseract OCR added. 374/374 tests passing.
 
 | Wk | Phase | Status | Notes |
 |---|---|---|---|
@@ -64,6 +64,7 @@ task_breakdown.md > architecture.md > roadmap.md
 | 8 | Evaluation harness | **✓ Done** | 321/321 tests passing |
 | 9 | Audio + hardening | **✓ Done** | 348/348 tests passing |
 | 10 | Web UI + polish | **✓ Done** | 372/372 tests passing |
+| + | Tesseract OCR fallback for scanned PDFs | **✓ Done** | 374/374 tests passing |
 
 **W1 deliverables shipped:**
 - `claim_verifier/config.py` — schema, thresholds, Ollama model names

@@ -21,7 +21,7 @@ AMOUNT_TOLERANCE_PCT = 0.05   # ±5%
 LOS_TOLERANCE_ABS = 1         # ±1 day
 
 # Date tolerance
-DATE_TOLERANCE_DAYS = 1       # ±1 day
+DATE_TOLERANCE_DAYS = 2       # ±2 days (verbal testimony often off by a day or two)
 
 # Ollama local LLM
 OLLAMA_BASE_URL = "http://localhost:11434"
@@ -32,6 +32,12 @@ OLLAMA_TEMPERATURE = 0.0
 
 # LLM response cache (SHA-256 keyed; keeps CI offline; mandatory on CPU)
 LLM_CACHE_DIR = Path(__file__).parent.parent / ".llm_cache"
+
+# Extraction text cap — very long PDFs/transcripts are truncated before the LLM call
+MAX_EXTRACT_CHARS = 8_000
+
+# OCR rendering resolution — 200 DPI is sufficient for printed bills and ~2× faster than 300
+OCR_DPI = 200
 
 # Retention policy (W9) — delete source files after pipeline run
 RETENTION_DELETE_SOURCES = False   # set True to auto-delete audio/PDF/transcript after run

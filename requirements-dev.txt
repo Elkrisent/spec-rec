@@ -6,4 +6,5 @@
 
 # Testing
 pytest>=7.4
-pytest-snapshot>=0.9   # snapshot tests for W4 reporting
+pytest-snapshot>=0.9
+httpx>=0.27             # FastAPI TestClient

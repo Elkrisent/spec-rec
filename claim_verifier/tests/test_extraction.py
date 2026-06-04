@@ -20,7 +20,7 @@ from pydantic import ValidationError
 
 from claim_verifier.backends import LLMBackend, StubBackend
 from claim_verifier.backends.ollama import OllamaBackend, _parse_content
-from claim_verifier.judge import DiagnosisJudge, LLMJudge, StubJudge
+from claim_verifier.judge import DiagnosisJudge, LLMJudge, StubJudge, _expand_abbrevs
 from claim_verifier.llm_cache import LLMCache
 from claim_verifier.models import FactSet, FactValue
 from claim_verifier.stages.extraction import (
@@ -406,6 +406,93 @@ class TestLLMJudge:
         verdict, note = judge.compare(_fv("x"), _fv("y"))
         assert verdict == "MATCH"
         assert note == "stub match"
+
+    def test_near_identical_diagnoses_skip_llm(self):
+        """token_sort_ratio ≥ 0.95 → MATCH returned without calling the backend."""
+        backend = StubBackend(response={})  # returns {} — would produce MISMATCH if reached
+        judge = LLMJudge(backend)
+        verdict, note = judge.compare(
+            _fv("acute appendicitis"), _fv("acute appendicitis")
+        )
+        assert verdict == "MATCH"
+        assert backend.call_count == 0
+
+    def test_near_identical_diagnoses_note_says_fast_match(self):
+        backend = StubBackend(response={})
+        judge = LLMJudge(backend)
+        _, note = judge.compare(_fv("type 2 diabetes mellitus"), _fv("type 2 diabetes mellitus"))
+        assert "fast match" in note
+
+    def test_dissimilar_diagnoses_still_call_llm(self):
+        """Dissimilar strings (ratio < 0.95) must go through the LLM."""
+        backend = StubBackend(response={"verdict": "MISMATCH", "rationale": "different"})
+        judge = LLMJudge(backend)
+        judge.compare(_fv("appendicitis"), _fv("appendectomy"))
+        assert backend.call_count == 1
+
+    # ---- abbreviation expansion ----
+
+    def test_expand_abbrevs_both_bone(self):
+        assert "both bones of the" in _expand_abbrevs("Fracture both bone leg left midshaft")
+
+    def test_expand_abbrevs_mc(self):
+        assert "metacarpal" in _expand_abbrevs("fracture 2nd and 3rd MC right")
+
+    def test_expand_abbrevs_fx(self):
+        assert "fracture" in _expand_abbrevs("Fx left tibia")
+
+    def test_expand_abbrevs_unchanged_plain_text(self):
+        plain = "broke my left leg and hurt my hand"
+        assert _expand_abbrevs(plain) == plain
+
+    def test_judge_sends_expanded_text_to_llm(self):
+        """Verify expansion is applied: expanded text appears in LLM messages."""
+        backend = StubBackend(response={"verdict": "MATCH", "rationale": "same"})
+        judge = LLMJudge(backend)
+        judge.compare(
+            _fv("broke my leg"),
+            _fv("Fracture both bone leg left midshaft, fracture 3rd MC right"),
+        )
+        user_content = backend.calls[0][0][-1]["content"]
+        assert "both bones of the" in user_content
+        assert "metacarpal" in user_content
+
+
+# ---------------------------------------------------------------------------
+# T5.8 — extract() input length cap
+# ---------------------------------------------------------------------------
+
+class TestExtractLengthCap:
+    def test_long_text_is_truncated_before_llm(self):
+        from claim_verifier.config import MAX_EXTRACT_CHARS
+
+        long_text = "medical records " * 1000  # well over 8 000 chars
+        assert len(long_text) > MAX_EXTRACT_CHARS  # precondition
+
+        captured: list[list[dict]] = []
+
+        class _CapturingStub:
+            def complete(self, messages: list, schema=None) -> dict:
+                captured.append(messages)
+                return _good_raw()
+
+        extract("document", "doc", long_text, _CapturingStub())
+        user_content = next(m["content"] for m in captured[0] if m["role"] == "user")
+        # The long repetition can't appear in the capped content
+        assert "medical records " * (MAX_EXTRACT_CHARS // len("medical records ") + 1) not in user_content
+
+    def test_short_text_passes_through_unchanged(self):
+        short = "Apollo Hospital. Admitted 12/03/2025."
+        captured: list[list[dict]] = []
+
+        class _CapturingStub:
+            def complete(self, messages: list, schema=None) -> dict:
+                captured.append(messages)
+                return _good_raw()
+
+        extract("transcript", "t", short, _CapturingStub())
+        user_content = next(m["content"] for m in captured[0] if m["role"] == "user")
+        assert short in user_content
 
 
 # ---------------------------------------------------------------------------

@@ -34,11 +34,11 @@ Everything removed below is a risk/complexity sink with low marginal portfolio v
 |---|---|---|
 | scispacy + `en_core_sci_sm` | install hell, marginal value | entity-type tagging inside the extraction LLM call |
 | `simple_icd_10` mapping | wrong tool (code-tree nav, not text→code); category match arbitrary | LLM diagnosis-equivalence judge with disease≠procedure guardrail |
-| Tesseract / pdf2image / poppler | garbles dense bill tables; never exercised by synthetic PDFs | text-layer PDFs only; scanned input rejected with a clear error |
+| Tesseract as primary OCR strategy | garbles dense charge tables; unreliable for structured bill data | text-layer PDFs primary; Tesseract added as fallback for simple scans |
 | Helsinki-NLP / translation | whole subsystem for an out-of-scope path | English-only; non-English detected and **rejected** |
 | Confidence multiplication in score | uncalibrated; deflates perfect matches | confidence drives **flags only** |
 | Dual HTML + Markdown rendering | two renderers for one MVP | Markdown only |
-| FastAPI as primary interface | unauthenticated PHI endpoint, extra surface | CLI primary; FastAPI optional stretch |
+| FastAPI as primary interface | unauthenticated PHI endpoint, extra surface | CLI primary; FastAPI added as secondary web interface with API key auth |
 | Presidio (heavy PII) | US/EU recognizers miss Aadhaar/PAN; breaks verbatim citations | best-effort regex redaction on API-bound copy; full Presidio deferred |
 
 ### Simplified
@@ -46,16 +46,16 @@ Everything removed below is a risk/complexity sink with low marginal portfolio v
   excluded; empty denominator ⇒ `INSUFFICIENT_DATA`. Confidence is out of the formula.
 - **Diagnosis:** one LLM equivalence call (verdict + rationale + entity types); no code DB.
 - **Hospital name:** deterministic normalize → `rapidfuzz`; **weight lowered to 0.10**, advisory.
-- **Dates:** `dateparser(DATE_ORDER='DMY')`; transcript year absent ⇒ compare month/day only; ±1 day.
+- **Dates:** `dateparser(DATE_ORDER='DMY')`; transcript year absent ⇒ compare month/day only; ±2 days.
 - **Modules:** 5 logical **functions in one pipeline**; one FactSet schema; V1 ceremony dropped.
 - **Extraction:** **tool-use / structured output** + one validation-retry.
 - **Inputs:** accept `--audio` **or** `--transcript` (decouples STT; fully testable without audio).
 - **Quotes:** substring-validate; on fail keep value, mark quote `unverified` (don't zero).
 
 ### Deferred (Production Roadmap — documented, not built)
-Scanned/handwritten OCR · multilingual + translation · diagnosis→ICD/UMLS mapping · multi-document
-reconciliation · full Presidio PII (Aadhaar/PAN recognizers) · production auth/encryption/retention ·
-cloud/DB storage · any real patient data.
+Production-grade scanned PDF OCR (Vision/Textract) · multilingual + translation · diagnosis→ICD/UMLS
+mapping · multi-document reconciliation · full Presidio PII (Aadhaar/PAN recognizers) · production
+auth/encryption · cloud/DB storage · any real patient data.
 
 ---
 
@@ -65,8 +65,8 @@ Weights **sum to 1.0**. Hospital lowered (advisory); the authoritative/objective
 | id | label | weight | match_type | tolerance |
 |---|---|---|---|---|
 | `hospital_name` | Hospital / Facility | **0.10** | fuzzy_string | ratio ≥ 0.85 |
-| `admission_date` | Admission Date | 0.20 | date | ±1 day (month/day if year absent) |
-| `discharge_date` | Discharge Date | 0.10 | date | ±1 day; optional |
+| `admission_date` | Admission Date | 0.20 | date | ±2 days (month/day if year absent) |
+| `discharge_date` | Discharge Date | 0.10 | date | ±2 days; optional |
 | `diagnosis` | Primary Diagnosis | 0.25 | medical_semantic | LLM equivalence |
 | `billed_amount` | Total Billed Amount | 0.25 | numeric | ±5% |
 | `length_of_stay` | Duration (days) | 0.10 | numeric | ±1 day |
@@ -138,27 +138,27 @@ config swap — no API SDK in `requirements.txt`.
 ## 5. Tech stack
 ```
 Language          : Python 3.12+
-Interface         : CLI (Typer)              # FastAPI deferred (optional stretch)
-STT               : faster-whisper (base default, CPU) — bypassable via --transcript  # W9
-PDF text          : pdfplumber               # text-layer only
-Fuzzy match       : rapidfuzz
+Interfaces        : CLI (Typer) + Web API (FastAPI + embedded HTML frontend)
+STT               : faster-whisper (base default, CPU) — bypassable via --transcript
+PDF text          : pdfplumber (text-layer) + pytesseract/pdf2image (OCR fallback)
+Fuzzy match       : rapidfuzz (token_sort_ratio + subset check for hospital names)
 Date parsing      : dateparser (DATE_ORDER='DMY')
-LLM backend       : Ollama (local, $0, OpenAI-compatible REST, JSON-schema constrained output)
+LLM backends      : OllamaBackend (local, $0, JSON-schema constrained)
+                    AnthropicBackend (Claude API, same LLMBackend interface)
   Quality model   : qwen2.5:7b-instruct-q4_K_M  (~4.7GB RAM)
   Fast/dev model  : qwen2.5:3b-instruct          (~2.5GB RAM; use if 7B >60s/call)
-LLM interface     : LLMBackend Protocol (one Ollama impl; hosted model = config swap)
+  Cloud model     : claude-haiku-4-5-20251001    (set BACKEND_TYPE=anthropic)
 Response cache    : llm_cache.py (SHA-256 keyed; mandatory for CPU; makes CI offline)
-Diagnosis judge   : local LLM via LLMBackend Protocol
-                    optional: sentence-transformers MiniLM as secondary similarity signal
-PII redaction     : stdlib regex (best-effort)   # Presidio deferred
+Diagnosis judge   : LLMJudge with medical abbreviation expansion + fast-path for near-identical
+                    values (avoids LLM call when rapidfuzz ratio ≥ 0.95)
+PII redaction     : stdlib regex (phone / Aadhaar / PAN / email)   # Presidio deferred
 Report rendering  : Jinja2 → Markdown
-Storage           : local filesystem; retention covers derived artifacts
-RAM strategy      : load models sequentially (Ollama load/unload); never co-resident
-                    Whisper + 7B LLM + embeddings
+Storage           : local filesystem; secure_delete + retention policy for derived artifacts
+Extraction        : parallel ThreadPoolExecutor(2) — transcript + document called concurrently
 
-REMOVED vs V1: scispacy, en_core_sci_sm, simple_icd_10, pytesseract/Tesseract,
-               pdf2image/poppler, Helsinki-NLP/transformers, presidio-analyzer,
-               Anthropic SDK, FastAPI(→optional stretch)
+REMOVED vs V1: scispacy, en_core_sci_sm, simple_icd_10,
+               Helsinki-NLP/transformers, presidio-analyzer,
+               confidence multiplication in score
 ```
 
 ---
@@ -167,24 +167,30 @@ REMOVED vs V1: scispacy, en_core_sci_sm, simple_icd_10, pytesseract/Tesseract,
 ```
 claim_verifier/
 ├── cli.py                      # primary entrypoint (Typer)
-├── config.py                   # schema, weights, thresholds, model id
+├── config.py                   # schema, weights, thresholds, model ids
 ├── models.py                   # Pydantic: FactSet, VerificationResult
 ├── pipeline.py                 # orchestrates stages 1–5, error contract
 ├── redaction.py                # best-effort regex PII
-├── llm_cache.py                # hash-keyed response cache (offline CI)
+├── retention.py                # secure_delete / apply_retention
+├── llm_cache.py                # SHA-256 keyed response cache (offline CI)
+├── judge.py                    # DiagnosisJudge Protocol + LLMJudge + StubJudge
+├── backends/
+│   ├── ollama.py               # OllamaBackend (keep-alive, warmup, JSON-schema)
+│   └── anthropic_backend.py    # AnthropicBackend (tool-use, same LLMCache)
 ├── stages/
-│   ├── ingestion.py            # Whisper / --transcript + pdfplumber text-layer
-│   ├── extraction.py           # Claude structured tool-use → FactSet (+validate/retry)
+│   ├── ingestion.py            # Whisper / --transcript + pdfplumber + Tesseract fallback
+│   ├── extraction.py           # LLM FactSet extraction, repair retry, parallel calls
 │   ├── normalization.py        # dates / amounts / hospital (no ICD)
 │   ├── verification.py         # matchers + diagnosis judge + scoring
 │   └── reporting.py            # Jinja2 → Markdown
-├── judge.py                    # diagnosis-equivalence LLM judge (Protocol + impl)
+├── api/
+│   ├── app.py                  # FastAPI: /verify multipart, /health, HTML frontend
+│   └── __main__.py             # python -m claim_verifier.api
 ├── schema/verification_schema.json
 ├── templates/report.md.j2
 ├── data_gen/ (generate_claims.py, generate_bill_pdf.py)
 ├── eval/ (run_eval.py, metrics.py, holdout/)
-├── tests/ (test_normalization.py, test_verification.py, test_extraction.py,
-│           test_pipeline.py, test_metrics.py, fixtures/)
+├── tests/                      # 399 tests, no Ollama required
 ├── requirements.txt
 └── README.md                   # incl. Production Roadmap (deferred list)
 ```

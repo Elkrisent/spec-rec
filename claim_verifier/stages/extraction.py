@@ -19,6 +19,7 @@ from typing import Optional, Union
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from claim_verifier.backends import LLMBackend
+from claim_verifier.config import MAX_EXTRACT_CHARS
 from claim_verifier.models import FactSet, FactValue
 
 # ---------------------------------------------------------------------------
@@ -75,7 +76,10 @@ Fields to extract:
   hospital_name   - name of the hospital or medical facility
   admission_date  - date of admission, preserved in the original text format
   discharge_date  - date of discharge, preserved in original format; null if not mentioned
-  diagnosis       - primary medical diagnosis or condition
+  diagnosis       - ALL injuries, diseases, or conditions mentioned — include every body part and
+                    location (left/right, which bone or organ). If multiple conditions exist, list
+                    them all joined with commas. Never summarise or drop any injury.
+                    Example: "fracture left tibia, fracture right 2nd and 3rd metacarpal" not just "fractures".
   billed_amount   - total billed amount as stated (preserve currency symbol and formatting)
   length_of_stay  - duration of hospital stay in whole days (integer; null if not explicitly stated)
 
@@ -212,6 +216,8 @@ def extract(
     text        : raw text to extract from
     backend     : LLMBackend implementation (OllamaBackend or StubBackend)
     """
+    if len(text) > MAX_EXTRACT_CHARS:
+        text = text[:MAX_EXTRACT_CHARS]
     messages = _build_messages(source_type, source_id, text)
     raw = backend.complete(messages, schema=EXTRACTION_SCHEMA)
 

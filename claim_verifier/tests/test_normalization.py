@@ -97,6 +97,10 @@ def test_normalize_date_unparseable_flag_contains_field_and_source():
     # Indian grouping (lakh system)
     ("1,20,000", 120000),
     ("50,000", 50000),
+    # Verbal transcripts: trailing "rupees" / "rupees only"
+    ("40,000 rupees", 40000),
+    ("Rs 40,000 rupees only", 40000),
+    ("50000 rupee", 50000),
     ("1,50,000", 150000),
     # Currency prefix variants
     ("₹50,000", 50000),

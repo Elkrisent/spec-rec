@@ -14,6 +14,7 @@ Public API:
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -126,9 +127,14 @@ def run_from_text(
     redacted_transcript = redact(transcript_text)
     redacted_document = redact(document_text)
 
-    # Stage 2: Extraction
+    # Stage 2: Extraction — both calls are independent; run in parallel
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        t_future = pool.submit(extract, "transcript", claim_id, redacted_transcript, backend)
+        d_future = pool.submit(extract, "document",   claim_id, redacted_document,   backend)
+    # pool.__exit__ waits for both futures before continuing
+
     try:
-        transcript_fs = extract("transcript", claim_id, redacted_transcript, backend)
+        transcript_fs = t_future.result()
     except ExtractionError as exc:
         error_msg = f"Transcript extraction failed: {exc}"
         vr = _error_result(claim_id, "EXTRACTION_FAILURE", error_msg)
@@ -140,7 +146,7 @@ def run_from_text(
         )
 
     try:
-        document_fs = extract("document", claim_id, redacted_document, backend)
+        document_fs = d_future.result()
     except ExtractionError as exc:
         error_msg = f"Document extraction failed: {exc}"
         vr = _error_result(claim_id, "EXTRACTION_FAILURE", error_msg)

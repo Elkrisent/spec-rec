@@ -14,8 +14,10 @@ dateparser>=1.2
 # Language detection — non-English rejection (W6)
 langdetect>=1.0.9
 
-# PDF text extraction — text-layer only (W6)
+# PDF text extraction — text-layer + scanned OCR fallback
 pdfplumber>=0.10
+pytesseract>=0.3
+pdf2image>=1.17
 
 # Report rendering (W4)
 jinja2>=3.1
@@ -36,5 +38,3 @@ python-multipart>=0.0.9
 uvicorn[standard]>=0.29
 anthropic>=0.27
 
-# W5 optional: secondary semantic signal for diagnosis matching
-# sentence-transformers>=2.0

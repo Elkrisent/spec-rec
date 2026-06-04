@@ -56,11 +56,19 @@ class OllamaBackend:
         self._cache.put(self._model, messages, response, **cache_kwargs)
         return _parse_content(response)
 
+    def warmup(self) -> None:
+        """Pre-load the model into Ollama's memory so the first real request is fast."""
+        try:
+            self._call_ollama([{"role": "user", "content": "hi"}], schema=None)
+        except Exception:
+            pass  # warmup failure is non-fatal
+
     def _call_ollama(self, messages: list[dict], schema: dict | None) -> dict:
         payload: dict[str, Any] = {
             "model": self._model,
             "messages": messages,
             "stream": False,
+            "keep_alive": "30m",  # keep model resident between requests
             "options": {"temperature": OLLAMA_TEMPERATURE},
             "format": schema if schema is not None else "json",
         }

@@ -189,8 +189,8 @@ scanned), English only, must yield ≥ 100 characters, max 20 MB.
 | Field | Match type | Tolerance |
 |---|---|---|
 | Hospital / Facility | Fuzzy string (rapidfuzz) | ratio ≥ 0.85 |
-| Admission Date | Date | ±1 day |
-| Discharge Date | Date | ±1 day; optional |
+| Admission Date | Date | ±2 days |
+| Discharge Date | Date | ±2 days; optional |
 | Primary Diagnosis | LLM equivalence judge | disease ≠ procedure |
 | Total Billed Amount | Numeric | ±5% |
 | Duration of Admission | Numeric | ±1 day |
@@ -232,34 +232,36 @@ Targets: precision ≥ 80%, FP rate on CLEAN cases ≤ 15%.
 ## Running tests
 
 ```bash
-# All 348 tests — no Ollama needed (W5+ tests use pre-seeded LLM cache)
+# All 399 tests — no Ollama needed (W5+ tests use pre-seeded LLM cache)
 python -m pytest
 
 # Single module
 python -m pytest claim_verifier/tests/test_pipeline.py -v
 ```
 
-| File | Week | Tests |
+| File | Tests | What it covers |
 |---|---|---|
-| `test_contracts.py` | W1 | 31 |
-| `test_normalization.py` | W2 | 49 |
-| `test_verification.py` | W3 | 40 |
-| `test_reporting.py` | W4 | 44 |
-| `test_extraction.py` | W5 | 47 |
-| `test_pipeline.py` | W6 | 53 |
-| `test_data_gen.py` | W7 | 34 |
-| `test_metrics.py` | W8 | 23 |
-| `test_audio.py` | W9 | 27 |
-| `test_api.py` | W10 | 24 |
+| `test_contracts.py` | 31 | Pydantic models, schema weights |
+| `test_normalization.py` | 52 | Date / amount / hospital normalizers |
+| `test_verification.py` | 52 | Fuzzy / date / numeric / medical matchers, scoring |
+| `test_reporting.py` | 44 | Jinja2 template, citations, risk guidance |
+| `test_extraction.py` | 57 | LLM extraction, retry, quote verification, abbreviation expansion |
+| `test_pipeline.py` | 55 | Ingestion, redaction, OCR fallback, pipeline E2E |
+| `test_data_gen.py` | 34 | Bill PDF, round-trip, error injection, dataset |
+| `test_metrics.py` | 23 | Precision / recall / FP-rate math |
+| `test_audio.py` | 27 | Audio transcription, secure delete, retention |
+| `test_api.py` | 24 | FastAPI endpoints, auth, upload validation |
 
 ---
 
 ## Known limitations
 
-**1. Scanned / photo PDFs are rejected.**  
-Only digitally-created PDFs (text layer) are accepted. OCR on dense hospital
-bill tables is unreliable; production-grade support would require Google Vision
-or AWS Textract (see Production Roadmap below).
+**1. Scanned / photo PDFs use Tesseract OCR fallback with limited table accuracy.**  
+When pdfplumber extracts fewer than 100 characters, the system automatically
+falls back to Tesseract OCR (pytesseract + pdf2image). This handles simple
+scanned documents but may miss values in dense tabular charge breakdowns.
+For production accuracy on scanned bills, Google Vision or AWS Textract
+would be needed (see Production Roadmap).
 
 **2. Vague transcript language inflates the risk score.**  
 Spoken forms ("around fifty thousand", "twelfth of March") fail normalization
@@ -280,7 +282,7 @@ Items deferred from the current scope. Ordered by impact:
 
 | Item | Why deferred | What it needs |
 |---|---|---|
-| OCR for scanned bills | Google Vision / AWS Textract costs; unreliable on tables | Cloud API + post-OCR cleaning |
+| Production-grade OCR for scanned bills | Tesseract fallback added; dense table layouts need Vision/Textract | Cloud API + post-OCR table parsing |
 | GPU / batched inference | CPU latency acceptable for demo; GPU adds cost/complexity | CUDA environment |
 | Hosted API | Ollama is local-only; Anthropic API backend already wired in `LLMBackend` | API key + cloud hosting |
 | DIAGNOSIS error injection in synthetic data | Currently only AMOUNT/DATE/HOSPITAL errors; adds coverage | Synonym corpus for diagnosis paraphrasing |
@@ -289,7 +291,7 @@ Items deferred from the current scope. Ordered by impact:
 | Capped denominator / minimum verified-fields threshold | Prevents 100% score when most fields are MISSING | Scoring model change + threshold tuning |
 | Multi-language support | Only English currently; Indian regional languages common | Translation layer or multilingual model |
 | Audit log / tamper-evident report export | Required for production insurance workflows | Signed PDF + event log |
-| Web UI (FastAPI + HTML frontend) | Done — W10 | FastAPI, HTML/JS form, Ollama or Anthropic API backend |
+| Word-form spoken dates / amounts | "third of May" / "forty thousand rupees" still unparseable | word2number conversion layer |
 
 ---
 
@@ -301,23 +303,25 @@ claim_verifier/
   models.py           — Pydantic v2 data contracts
   llm_cache.py        — SHA-256-keyed LLM response cache
   redaction.py        — PII masking (phone/Aadhaar/PAN/email)
-  retention.py        — secure_delete / apply_retention (W9)
-  judge.py            — DiagnosisJudge Protocol + LLMJudge + StubJudge
+  retention.py        — secure_delete / apply_retention
+  judge.py            — DiagnosisJudge Protocol + LLMJudge (abbrev expansion) + StubJudge
   pipeline.py         — orchestrator: ingestion → extraction → normalize → verify → report
   cli.py              — Typer CLI (verify --transcript/--audio --document)
-  backends/           — LLMBackend Protocol, OllamaBackend, StubBackend
+  backends/
+    ollama.py         — OllamaBackend (local LLM, keep-alive, warmup)
+    anthropic_backend.py — AnthropicBackend (Claude API, same LLMBackend interface)
   stages/
-    ingestion.py      — ingest_transcript / ingest_document / ingest_audio
+    ingestion.py      — ingest_transcript / ingest_document (+ Tesseract OCR fallback) / ingest_audio
     normalization.py  — date / amount / hospital / LOS normalization
-    extraction.py     — LLM-based FactSet extraction with repair retry
+    extraction.py     — LLM-based FactSet extraction with repair retry, parallel calls
     verification.py   — field-by-field matching and scoring
     reporting.py      — Jinja2 Markdown report renderer
+  api/
+    app.py            — FastAPI app factory, multipart upload, HTML frontend embedded
+    __main__.py       — python -m claim_verifier.api entry point
   eval/
     metrics.py        — precision/recall/F1/FP-rate computation
     run_eval.py       — runs pipeline over 50 synthetic + 10 holdout cases
     holdout/          — 10 hand-built messy test cases
-  data_gen/
-    generate_claims.py  — 50-case synthetic dataset (Faker + error injection)
-    generate_bill_pdf.py — text-layer PDF generator (reportlab)
-  tests/              — 348 tests, no Ollama required
+  tests/              — 399 tests, no Ollama required
 ```
